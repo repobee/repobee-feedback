@@ -25,12 +25,7 @@ def callback(args: argparse.Namespace, api: plug.API) -> None:
     repo_names = plug.generate_repo_names(args.students, args.master_repo_names)
     issues = _collect_issues(repo_names, "issue.md")
     for repo_name, issue in issues:
-        open_issue = True
-        if not args.batch_mode:
-            open_issue = (
-                input("Open issue {} in {}? (y/n)".format(issue.title, repo_name))
-                == "y"
-            )
+        open_issue = args.batch_mode or _ask_for_open(issue, repo_name)
         if open_issue:
             api.open_issue(issue.title, issue.body, [repo_name])
         else:
@@ -62,6 +57,21 @@ class FeedbackCommand(plug.Plugin):
                 plug.BaseParser.STUDENTS,
             ],
         )
+
+
+def _ask_for_open(issue: plug.Issue, repo_name: str) -> bool:
+    trunc_len = 50
+    LOGGER.info(
+        'Processing issue "{}" for {}: {}{}'.format(
+            issue.title,
+            repo_name,
+            issue.body[:trunc_len],
+            "[...]" if len(issue.body) > trunc_len else "",
+        )
+    )
+    return (
+        input('Open issue "{}" in repo {}? (y/n)'.format(issue.title, repo_name)) == "y"
+    )
 
 
 def _collect_issues(

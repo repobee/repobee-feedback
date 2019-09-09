@@ -1,0 +1,100 @@
+"""An extension command for RepoBee that looks for files called issue.md in
+student repos and opens them as issues on the issue tracker.
+
+.. module:: feedback
+    :synopsis: A RepoBee plugin that finds issue files in student repos and opens them on their issue trackers
+
+.. moduleauthor:: Simon Larsén
+"""
+
+import pathlib
+import os
+import sys
+import argparse
+from typing import Union, Iterable, Tuple
+
+import daiquiri
+import repobee_plug as plug
+
+PLUGIN_NAME = "feedback"
+
+LOGGER = daiquiri.getLogger(__file__)
+
+
+def callback(args: argparse.Namespace, api: plug.API) -> None:
+    repo_names = plug.generate_repo_names(args.students, args.master_repo_names)
+    issues = _collect_issues(repo_names, "issue.md")
+    for repo_name, issue in issues:
+        open_issue = True
+        if not args.batch_mode:
+            open_issue = (
+                input("Open issue {} in {}? (y/n)".format(issue.title, repo_name))
+                == "y"
+            )
+        if open_issue:
+            api.open_issue(issue.title, issue.body, [repo_name])
+        else:
+            LOGGER.info("Skipping {}".format(repo_name))
+
+
+class FeedbackCommand(plug.Plugin):
+    def create_extension_command(self):
+        parser = plug.ExtensionParser()
+        parser.add_argument(
+            "-b",
+            "--batch-mode",
+            help="Run without any yes/no promts.",
+            action="store_true",
+        )
+        return plug.ExtensionCommand(
+            parser=parser,
+            name="feedback",
+            help="Open issue files (issue.md) found in student repos as issues.",
+            description=(
+                "Search through local student repos for issue.md files, "
+                "that are then opened as issues on the issue trackers of the "
+                "respective repos."
+            ),
+            callback=callback,
+            requires_api=True,
+            requires_base_parsers=[
+                plug.BaseParser.REPO_NAMES,
+                plug.BaseParser.STUDENTS,
+            ],
+        )
+
+
+def _collect_issues(
+    repo_names: Iterable[str], file_pattern: str
+) -> Iterable[Tuple[str, plug.Issue]]:
+    issues = []
+    local_repos = [
+        dir
+        for dir in pathlib.Path(".").resolve().glob("*")
+        if dir.name in repo_names and dir.is_dir()
+    ]
+    for repo in local_repos:
+        issues.append((repo.name, _find_issue(repo, file_pattern)))
+
+    missing_repos = set(repo_names) - set([r.name for r in local_repos])
+    if missing_repos:
+        LOGGER.warning("Could not find repos: {}".format(", ".join(missing_repos)))
+
+    return issues
+
+
+def _find_issue(repo: pathlib.Path, file_pattern: str):
+    matches = list(repo.rglob(file_pattern))
+    if len(matches) != 1:
+        raise plug.PlugError(
+            "Expected to find 1 match for pattern {} in {}"
+            ", but found {}".format(file_pattern, repo.name, len(matches))
+        )
+    issue_file = matches[0]
+    LOGGER.info("Found issue file at {}".format(issue_file))
+    return _read_issue(issue_file)
+
+
+def _read_issue(issue_path: pathlib.Path) -> plug.Issue:
+    with open(str(issue_path), "r", encoding=sys.getdefaultencoding()) as file:
+        return plug.Issue(file.readline().strip(), file.read())

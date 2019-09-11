@@ -8,9 +8,10 @@ student repos and opens them as issues on the issue tracker.
 """
 import pathlib
 import os
+import re
 import sys
 import argparse
-from typing import Union, Iterable, Tuple
+from typing import Union, Iterable, Tuple, List
 
 import daiquiri
 import repobee_plug as plug
@@ -19,11 +20,18 @@ PLUGIN_NAME = "feedback"
 
 LOGGER = daiquiri.getLogger(__file__)
 
+BEGIN_ISSUE_PATTERN = r"#ISSUE#(.*?)#(.*)"
+
 
 def callback(args: argparse.Namespace, api: plug.API) -> None:
     repo_names = plug.generate_repo_names(args.students, args.master_repo_names)
-    issues_dir = pathlib.Path(args.issues_dir).resolve()
-    issues = _collect_issues(repo_names, issues_dir)
+    if "multi_issues_file" in args:
+        issues_file = pathlib.Path(args.multi_issues_file).resolve()
+        issues = _parse_multi_issues_file(issues_file)
+    else:
+        issues_dir = pathlib.Path(args.issues_dir).resolve()
+        issues = _collect_issues(repo_names, issues_dir)
+    _raise_on_missing_issue_file(issues, repo_names)
     for repo_name, issue in issues:
         open_issue = args.batch_mode or _ask_for_open(issue, repo_name)
         if open_issue:
@@ -41,7 +49,8 @@ class FeedbackCommand(plug.Plugin):
             help="Run without any yes/no promts.",
             action="store_true",
         )
-        parser.add_argument(
+        issues_grp = parser.add_mutually_exclusive_group(required=True)
+        issues_grp.add_argument(
             "--id",
             "--issues-dir",
             help=(
@@ -55,11 +64,30 @@ class FeedbackCommand(plug.Plugin):
             type=str,
             default=".",
         )
+        issues_grp.add_argument(
+            "--mi",
+            "--multi-issues-file",
+            dest="multi_issues_file",
+            help=(
+                "File containing all issues to be openend. Each separate "
+                "issue should begin with a line containing only "
+                "#ISSUE#<STUDENT_REPO_NAME>#<ISSUE_TITLE>. For example, for "
+                "student `slarse` and assignment `task-1` and issue title "
+                "`Pass`, the line should read `#ISSUE#slarse-task-1#Pass` "
+                "(without backticks). The very first line of the file must "
+                "be an #ISSUE# line."
+            ),
+        )
         return plug.ExtensionCommand(
             parser=parser,
             name="issue-feedback",
             help="Open issues in student repos based on local issue files.",
-            description="Open issues in student repos based on local issue files.",
+            description=(
+                "Open issues in student repos based on local issue files. "
+                "Operates in two different modes, depending on if you "
+                "specify `--multi-issues-file` or `--issues-dir`. See the "
+                "description of those options for details."
+            ),
             callback=callback,
             requires_api=True,
             requires_base_parsers=[
@@ -85,6 +113,14 @@ def _ask_for_open(issue: plug.Issue, repo_name: str) -> bool:
     )
 
 
+def _raise_on_missing_issue_file(repos_and_issues, repo_names):
+    expected = set(repo_names)
+    for repo_name, _ in repos_and_issues:
+        expected.remove(repo_name)
+    if expected:
+        raise plug.PlugError("Missing issues for: " + ", ".join(expected))
+
+
 def _collect_issues(
     repo_names: Iterable[str], issues_dir: pathlib.Path
 ) -> Iterable[Tuple[str, plug.Issue]]:
@@ -92,9 +128,8 @@ def _collect_issues(
     md_files = list(issues_dir.glob("*.md"))
     for repo_name in repo_names:
         expected_file = issues_dir / "{}.md".format(repo_name)
-        if expected_file not in md_files:
-            raise plug.PlugError("Expected to find issue file {}".format(expected_file))
-        issues.append((repo_name, _read_issue(expected_file)))
+        if expected_file.is_file():
+            issues.append((repo_name, _read_issue(expected_file)))
 
     return issues
 
@@ -102,3 +137,37 @@ def _collect_issues(
 def _read_issue(issue_path: pathlib.Path) -> plug.Issue:
     with open(str(issue_path), "r", encoding=sys.getdefaultencoding()) as file:
         return plug.Issue(file.readline().strip(), file.read())
+
+
+def _parse_multi_issues_file(
+    issues_file: pathlib.Path
+) -> Iterable[Tuple[str, plug.Issue]]:
+    repos_and_issues = []
+    with open(str(issues_file), mode="r", encoding=sys.getdefaultencoding()) as file:
+        lines = list(file.readlines())
+
+    if not lines or not re.match(BEGIN_ISSUE_PATTERN, lines[0], re.IGNORECASE):
+        raise plug.PlugError("first line of multi issues file not #ISSUE# line")
+
+    issue_blocks = _extract_issue_blocks(lines)
+    return list(_extract_issues(issue_blocks, lines))
+
+
+def _extract_issue_blocks(lines: List[str]):
+    issue_blocks = []
+    prev = 0
+    for i, line in enumerate(lines[1:], 1):
+        if re.match(BEGIN_ISSUE_PATTERN, line, re.IGNORECASE):
+            issue_blocks.append((prev, i))
+            prev = i
+    issue_blocks.append((prev, len(lines)))
+    return issue_blocks
+
+
+def _extract_issues(issue_blocks: Tuple[int, int], lines: List[str]):
+    for begin, end in issue_blocks:
+        repo_name, title = re.match(
+            BEGIN_ISSUE_PATTERN, lines[begin], re.IGNORECASE
+        ).groups()
+        body = "".join(lines[begin + 1 : end])
+        yield (repo_name, plug.Issue(title=title.strip(), body=body.rstrip()))

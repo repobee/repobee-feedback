@@ -6,6 +6,9 @@ files in which the first line is taken to be the title of the issue, and the
 rest the body. The `issue-feedback` command looks for issue files called
 `<STUDENT_REPO_NAME>.md`, and opens them in the respective student repos.
 
+Alternatively, you can also use a special file format to put all issues into
+the same file, see [The multi issues file](#the-multi-issues-file).
+
 > **Important:** This plugin is still in very early stages and may change
 > considerably over the coming weeks.
 
@@ -52,6 +55,30 @@ the title, the rest is the body.** Note that the title (i.e. first line) should
 not contain any formatting as it typically does not render well on
 GitHub/GitLab.
 
+### The multi issues file
+Alternatively, you can put all issues into a single file and specify the path
+to it with the `--multi-issues-file` argument (see [Optional
+arguments](#optional-arguments)). Each issue should begin with
+`#ISSUE#<STUDENT_REPO_NAME>#<ISSUE_TITLE>`, and everything between that line
+and the next such line is considered to be the body of the issue. Here is an
+example file with issues for students `slarse` and `rjglasse` for assignment
+`task-1`.
+
+```
+#ISSUE#slarse-task-1#This is a neat title
+Well done mr slarse, you did good here.
+You could have done a bit better on blabla, though.
+
+Overall well done!
+
+#ISSUE#rjglasse-task-1#This is another title
+Hmm, not sure what's going on here.
+
+Could you explain it better?
+```
+
+> **Note:** The first line of the multi issues file must be an `#ISSUE#` line.
+
 ### Using the `issue-feedback` command
 The `issue-feedback` command is straightforward. It takes the "regular" options
 that most RepoBee commands (base url, token, etc), but these are also picked
@@ -71,8 +98,10 @@ is the default issue directory) for `slarse-task-1.md` and `rjglasse-task-1.md`.
 > disable that.
 
 ### Optional arguments
-`issue-feedback` has two optional arguments: `-b|--batch-mode` and
-`--id|--issue-dir`. Here are the descriptions for them:
+`issue-feedback` has three optional arguments: `-b|--batch-mode`,
+`--id|--issue-dir` and `--mi|--multi-issues-file`.
+
+> **Note:** `--id` and `--mi` are mutually exclusive, you can only supply one.
 
 ```
   -b, --batch-mode      Run without any yes/no promts.
@@ -81,6 +110,14 @@ is the default issue directory) for `slarse-task-1.md` and `rjglasse-task-1.md`.
                         named <STUDENT_REPO_NAME>.md (for example, slarse-
                         task-1.md). The first line is assumed to be the title,
                         and the rest the body. Defaults to the current
+  --mi MULTI_ISSUES_FILE, --multi-issues-file MULTI_ISSUES_FILE
+                        File containing all issues to be openend. Each
+                        separate issue should begin with a line containing
+                        only #ISSUE#<STUDENT_REPO_NAME>#<ISSUE_TITLE>. For
+                        example, for student `slarse` and assignment `task-1`
+                        and issue title `Pass`, the line should read
+                        `#ISSUE#slarse-task-1#Pass` (without backticks). The
+                        very first line of the file must be an #ISSUE# line.
 ```
 
 # License

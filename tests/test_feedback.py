@@ -35,18 +35,40 @@ def _write_issue(issue: plug.Issue, path: pathlib.Path):
     path.write_text(text, encoding=sys.getdefaultencoding())
 
 
+def _write_multi_issues_file(repos_and_issues, path):
+    with open(str(path), mode="w", encoding=sys.getdefaultencoding()) as file:
+        cur = 0
+        for repo_name, issue in repos_and_issues:
+            if cur:
+                file.write("\n")
+            file.write("#ISSUE#{}#{}\n".format(repo_name, issue.title))
+            file.write(issue.body)
+            cur += 1
+
+
 def test_register():
     """Just test that there is no crash"""
     plugin.register_plugins([feedback])
 
 
 @pytest.fixture
-def parsed_args(tmp_path):
+def parsed_args_issues_dir(tmp_path):
     return argparse.Namespace(
         students=list(STUDENT_TEAMS),
         master_repo_names=list(MASTER_REPO_NAMES),
         batch_mode=True,
         issues_dir=str(tmp_path),
+    )
+
+
+@pytest.fixture
+def parsed_args_multi_issues_file(with_multi_issues_file):
+    issues_file, _ = with_multi_issues_file
+    return argparse.Namespace(
+        students=list(STUDENT_TEAMS),
+        master_repo_names=list(MASTER_REPO_NAMES),
+        batch_mode=True,
+        multi_issues_file=issues_file,
     )
 
 
@@ -70,6 +92,16 @@ def with_issues(tmp_path):
     return existing_issues
 
 
+@pytest.fixture
+def with_multi_issues_file(tmp_path):
+    """Create the multi issues file."""
+    repo_names = plug.generate_repo_names(STUDENT_TEAM_NAMES, MASTER_REPO_NAMES)
+    repos_and_issues = [(repo_name, random.choice(ISSUES)) for repo_name in repo_names]
+    issues_file = tmp_path / "issues.md"
+    _write_multi_issues_file(repos_and_issues, issues_file)
+    return issues_file, repos_and_issues
+
+
 class TestFeedbackCommand:
     def test_init(self):
         cmd = feedback.FeedbackCommand()
@@ -89,7 +121,9 @@ class TestFeedbackCommand:
 class TestCallback:
     """Tests for the primary callback."""
 
-    def test_opens_issues_from_issues_dir(self, with_issues, parsed_args, api_mock):
+    def test_opens_issues_from_issues_dir(
+        self, with_issues, parsed_args_issues_dir, api_mock
+    ):
         """Test that the callback calls the API.open_issue for the expected
         repos and issues, when the issues all exist and are well formed.
         """
@@ -98,12 +132,12 @@ class TestCallback:
             for repo_name, issue in with_issues
         ]
 
-        feedback.callback(args=parsed_args, api=api_mock)
+        feedback.callback(args=parsed_args_issues_dir, api=api_mock)
 
         api_mock.open_issue.assert_has_calls(expected_calls, any_order=True)
 
     def test_aborts_if_issue_is_missing(
-        self, with_issues, parsed_args, api_mock, tmp_path
+        self, with_issues, parsed_args_issues_dir, api_mock, tmp_path
     ):
         """Test that the callback exits with a plug.PlugError if any of the
         expected issues is not found.
@@ -115,18 +149,18 @@ class TestCallback:
         missing_file.unlink()
 
         with pytest.raises(plug.PlugError) as exc_info:
-            feedback.callback(args=parsed_args, api=api_mock)
+            feedback.callback(args=parsed_args_issues_dir, api=api_mock)
 
-        assert str(missing_file) in str(exc_info.value)
+        assert repo_without_issue in str(exc_info.value)
         assert not api_mock.open_issue.called
 
     def test_opens_nothing_if_open_prompt_returns_false(
-        self, with_issues, parsed_args, api_mock
+        self, with_issues, parsed_args_issues_dir, api_mock
     ):
         """Test that the callback does not attempt to open any issues if the
         'may I open' prompt returns false.
         """
-        args_dict = vars(parsed_args)
+        args_dict = vars(parsed_args_issues_dir)
         args_dict["batch_mode"] = False
         parsed_args_interactive = argparse.Namespace(**args_dict)
 
@@ -136,3 +170,19 @@ class TestCallback:
             feedback.callback(args=parsed_args_interactive, api=api_mock)
 
         assert not api_mock.open_issue.called
+
+    def test_opens_issues_from_multi_issues_file(
+        self, with_multi_issues_file, api_mock, parsed_args_multi_issues_file
+    ):
+        """Test that the callback opens issues correctly when they are all
+        contained in a multi issues file.
+        """
+        issues_file, repos_and_issues = with_multi_issues_file
+        expected_calls = [
+            mock.call(issue.title, issue.body, [repo_name])
+            for repo_name, issue in repos_and_issues
+        ]
+
+        feedback.callback(args=parsed_args_multi_issues_file, api=api_mock)
+
+        api_mock.open_issue.assert_has_calls(expected_calls)

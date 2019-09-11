@@ -6,7 +6,6 @@ student repos and opens them as issues on the issue tracker.
 
 .. moduleauthor:: Simon Larsén
 """
-
 import pathlib
 import os
 import sys
@@ -23,7 +22,8 @@ LOGGER = daiquiri.getLogger(__file__)
 
 def callback(args: argparse.Namespace, api: plug.API) -> None:
     repo_names = plug.generate_repo_names(args.students, args.master_repo_names)
-    issues = _collect_issues(repo_names, args.issue_pattern)
+    issues_dir = pathlib.Path(args.issues_dir).resolve()
+    issues = _collect_issues(repo_names, issues_dir)
     for repo_name, issue in issues:
         open_issue = args.batch_mode or _ask_for_open(issue, repo_name)
         if open_issue:
@@ -42,24 +42,24 @@ class FeedbackCommand(plug.Plugin):
             action="store_true",
         )
         parser.add_argument(
-            "-i",
-            "--issue-pattern",
+            "--id",
+            "--issues-dir",
             help=(
-                "The pattern used to find issue files. Should be a bash "
-                "pattern (i.e. not regex). Default is 'issue.md'."
+                "Directory containing issue files. The files should be "
+                "named <STUDENT_REPO_NAME>.md (for example, "
+                "slarse-task-1.md). The first line is assumed to be the "
+                "title, and the rest the body. Defaults to the current "
+                "directory."
             ),
+            dest="issues_dir",
             type=str,
-            default="issue.md",
+            default=".",
         )
         return plug.ExtensionCommand(
             parser=parser,
             name="issue-feedback",
-            help="Open issue files (issue.md) found in student repos as issues.",
-            description=(
-                "Search through local student repos for issue.md files, "
-                "that are then opened as issues on the issue trackers of the "
-                "respective repos."
-            ),
+            help="Open issues in student repos based on local issue files.",
+            description="Open issues in student repos based on local issue files.",
             callback=callback,
             requires_api=True,
             requires_base_parsers=[
@@ -80,41 +80,23 @@ def _ask_for_open(issue: plug.Issue, repo_name: str) -> bool:
         )
     )
     return (
-        input('Open issue "{}" in repo {}? (y/n) '.format(issue.title, repo_name)) == "y"
+        input('Open issue "{}" in repo {}? (y/n) '.format(issue.title, repo_name))
+        == "y"
     )
 
 
 def _collect_issues(
-    repo_names: Iterable[str], issue_pattern: str
+    repo_names: Iterable[str], issues_dir: pathlib.Path
 ) -> Iterable[Tuple[str, plug.Issue]]:
     issues = []
-    local_repos = [
-        dir
-        for dir in pathlib.Path(".").resolve().glob("*")
-        if dir.name in repo_names and dir.is_dir()
-    ]
-    for repo in local_repos:
-        issues.append((repo.name, _find_issue(repo, issue_pattern)))
-
-    missing_repos = set(repo_names) - set([r.name for r in local_repos])
-    if missing_repos:
-        LOGGER.warning("Could not find repos: {}".format(", ".join(missing_repos)))
+    md_files = list(issues_dir.glob("*.md"))
+    for repo_name in repo_names:
+        expected_file = issues_dir / "{}.md".format(repo_name)
+        if expected_file not in md_files:
+            raise plug.PlugError("Expected to find issue file {}".format(expected_file))
+        issues.append((repo_name, _read_issue(expected_file)))
 
     return issues
-
-
-def _find_issue(repo: pathlib.Path, issue_pattern: str):
-    matches = list(repo.rglob(issue_pattern))
-    if len(matches) != 1:
-        raise plug.PlugError(
-            "Expected to find 1 match for pattern {} in {}"
-            ", but found {}: {}".format(
-                issue_pattern, repo.name, len(matches), list(map(str, matches))
-            )
-        )
-    issue_file = matches[0]
-    LOGGER.info("Found issue file at {}".format(issue_file))
-    return _read_issue(issue_file)
 
 
 def _read_issue(issue_path: pathlib.Path) -> plug.Issue:

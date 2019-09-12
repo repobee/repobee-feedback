@@ -16,7 +16,7 @@ required = ["repobee-plug>=0.10.0", "daiquiri"]
 setup(
     name="repobee-feedback",
     version=__version__,
-    description="A RepoBee plugin that finds issue files in student repos and opens them on their issue trackers",
+    description="A plugin that adds the issue-feedback command to RepoBee",
     long_description=readme,
     long_description_content_type="text/markdown",
     author="Simon Larsén",

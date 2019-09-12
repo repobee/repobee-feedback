@@ -2,16 +2,16 @@
 student repos and opens them as issues on the issue tracker.
 
 .. module:: feedback
-    :synopsis: A RepoBee plugin that finds issue files in student repos and opens them on their issue trackers
+    :synopsis: A RepoBee plugin that finds issue files in student repos and
+        opens them on their issue trackers
 
 .. moduleauthor:: Simon Larsén
 """
 import pathlib
-import os
 import re
 import sys
 import argparse
-from typing import Union, Iterable, Tuple, List
+from typing import Iterable, Tuple, List
 
 import daiquiri
 import repobee_plug as plug
@@ -24,7 +24,9 @@ BEGIN_ISSUE_PATTERN = r"#ISSUE#(.*?)#(.*)"
 
 
 def callback(args: argparse.Namespace, api: plug.API) -> None:
-    repo_names = plug.generate_repo_names(args.students, args.master_repo_names)
+    repo_names = plug.generate_repo_names(
+        args.students, args.master_repo_names
+    )
     if "multi_issues_file" in args:
         issues_file = pathlib.Path(args.multi_issues_file).resolve()
         issues = _parse_multi_issues_file(issues_file)
@@ -108,7 +110,9 @@ def _ask_for_open(issue: plug.Issue, repo_name: str) -> bool:
         )
     )
     return (
-        input('Open issue "{}" in repo {}? (y/n) '.format(issue.title, repo_name))
+        input(
+            'Open issue "{}" in repo {}? (y/n) '.format(issue.title, repo_name)
+        )
         == "y"
     )
 
@@ -125,7 +129,6 @@ def _collect_issues(
     repo_names: Iterable[str], issues_dir: pathlib.Path
 ) -> Iterable[Tuple[str, plug.Issue]]:
     issues = []
-    md_files = list(issues_dir.glob("*.md"))
     for repo_name in repo_names:
         expected_file = issues_dir / "{}.md".format(repo_name)
         if expected_file.is_file():
@@ -142,12 +145,15 @@ def _read_issue(issue_path: pathlib.Path) -> plug.Issue:
 def _parse_multi_issues_file(
     issues_file: pathlib.Path
 ) -> Iterable[Tuple[str, plug.Issue]]:
-    repos_and_issues = []
-    with open(str(issues_file), mode="r", encoding=sys.getdefaultencoding()) as file:
+    with open(
+        str(issues_file), mode="r", encoding=sys.getdefaultencoding()
+    ) as file:
         lines = list(file.readlines())
 
     if not lines or not re.match(BEGIN_ISSUE_PATTERN, lines[0], re.IGNORECASE):
-        raise plug.PlugError("first line of multi issues file not #ISSUE# line")
+        raise plug.PlugError(
+            "first line of multi issues file not #ISSUE# line"
+        )
 
     issue_blocks = _extract_issue_blocks(lines)
     return list(_extract_issues(issue_blocks, lines))

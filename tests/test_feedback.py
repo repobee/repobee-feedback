@@ -2,7 +2,6 @@ import argparse
 import sys
 import pathlib
 import random
-import builtins
 from unittest import mock
 
 import pytest
@@ -24,7 +23,9 @@ PASS_ISSUE = plug.Issue(title="Pass", body="Well done!\nAbsolutely flawless!")
 KOMP_ISSUE = plug.Issue(
     title="Komplettering", body="Not perfect, you need to fix this."
 )
-FAIL_ISSUE = plug.Issue(title="Fail", body="Unfortunately, there are severe errors.")
+FAIL_ISSUE = plug.Issue(
+    title="Fail", body="Unfortunately, there are severe errors."
+)
 ISSUES = (PASS_ISSUE, KOMP_ISSUE, FAIL_ISSUE)
 
 random.seed(512)
@@ -82,7 +83,9 @@ def with_issues(tmp_path):
     """Create issue files in a temporary directory and return a list of (team,
     issue) tuples.
     """
-    repo_names = plug.generate_repo_names(STUDENT_TEAM_NAMES, MASTER_REPO_NAMES)
+    repo_names = plug.generate_repo_names(
+        STUDENT_TEAM_NAMES, MASTER_REPO_NAMES
+    )
     existing_issues = []
     for repo_name in repo_names:
         issue_file = tmp_path / "{}.md".format(repo_name)
@@ -95,8 +98,12 @@ def with_issues(tmp_path):
 @pytest.fixture
 def with_multi_issues_file(tmp_path):
     """Create the multi issues file."""
-    repo_names = plug.generate_repo_names(STUDENT_TEAM_NAMES, MASTER_REPO_NAMES)
-    repos_and_issues = [(repo_name, random.choice(ISSUES)) for repo_name in repo_names]
+    repo_names = plug.generate_repo_names(
+        STUDENT_TEAM_NAMES, MASTER_REPO_NAMES
+    )
+    repos_and_issues = [
+        (repo_name, random.choice(ISSUES)) for repo_name in repo_names
+    ]
     issues_file = tmp_path / "issues.md"
     _write_multi_issues_file(repos_and_issues, issues_file)
     return issues_file, repos_and_issues
@@ -164,9 +171,7 @@ class TestCallback:
         args_dict["batch_mode"] = False
         parsed_args_interactive = argparse.Namespace(**args_dict)
 
-        with mock.patch(
-            "builtins.input", return_value="n", autospec=True
-        ) as input_mock:
+        with mock.patch("builtins.input", return_value="n", autospec=True):
             feedback.callback(args=parsed_args_interactive, api=api_mock)
 
         assert not api_mock.open_issue.called

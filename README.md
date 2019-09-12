@@ -1,4 +1,12 @@
 # repobee-feedback
+[![Build Status](https://travis-ci.com/repobee/repobee-feedback.svg)](https://travis-ci.com/repobee/repobee-feedback)
+[![Code Coverage](https://codecov.io/gh/repobee/repobee-feedback/branch/master/graph/badge.svg)](https://codecov.io/gh/repobee/repobee-feedback)
+[![PyPi Version](https://badge.fury.io/py/repobee-feedback.svg)](https://badge.fury.io/py/repobee-feedback)
+![Supported Python Versions](https://img.shields.io/badge/python-3.5%7C3.6%7C3.7%7C3.8-blue)
+![Supported Platforms](https://img.shields.io/badge/platforms-Linux%2C%20macOS-blue.svg)
+[![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
+[![Code Style: Black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
+
 A [RepoBee](https://github.com/repobee/repobee) plugin that adds the
 `issue-feedback` command to RepoBee. It allows the user to specify a
 directory containing _issue files_. Issue files are simply markdown
@@ -13,11 +21,16 @@ the same file, see [The multi issues file](#the-multi-issues-file).
 > considerably over the coming weeks.
 
 ## Install
-As `repobee-feedback` is experimental, it is not on PyPi. You can install it
-directly from this repo with:
+`repobee-feedback` is on PyPi, so installing is as simple as:
 
 ```
-$ python3 -m pip install git+https://github.com/slarse/repobee-feedback.git
+python3 -m pip install --user --upgrade repobee-feedback
+```
+
+If you want the latest dev-build, you can also install directly from the repo:
+
+```
+$ python3 -m pip install git+https://github.com/repobee/repobee-feedback.git
 ```
 
 ## Usage

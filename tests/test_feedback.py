@@ -69,7 +69,7 @@ def parsed_args_multi_issues_file(with_multi_issues_file):
         students=list(STUDENT_TEAMS),
         master_repo_names=list(MASTER_REPO_NAMES),
         batch_mode=True,
-        multi_issues_file=issues_file,
+        multi_issues_file=str(issues_file),
     )
 
 

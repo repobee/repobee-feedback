@@ -1,0 +1,35 @@
+language: python
+branches:
+  only:
+  - master
+  - "/^v\\d+\\.\\d+\\.\\d+(-(alpha|beta|rc)(\\.\\d+)?)?$/"
+matrix:
+  include:
+  - os: linux
+    python: 3.5
+  - os: linux
+    python: 3.6
+  - os: linux
+    python: 3.7
+    dist: xenial
+  - os: linux
+    python: 3.8-dev
+install: pip install -e ".[TEST]"
+script: ".travis/run.sh"
+after_success:
+- codecov
+notifications:
+  email: false
+before_deploy:
+- pip install --upgrade twine setuptools
+deploy:
+  provider: pypi
+  user: slarse
+  password:
+    secure: q9nZduKXzeU4NSulzpAY4v/PB2kj3Ip1ipKyt8tFtpOhOu2Cz6k80ejwsksyN3L0Rwq2nDJoCKAlbf/lsknRTrFkpixsWx0c58E+q4/dp4pN/hcuKEnfNBa2DrgdqEa2NuZ3eJAcMtmxZLANjhGWeT4zQFBuJbs7sNHhUmd6BqcYOhR6zY/u8F1jWx8J2vsJoHgQGvVL+anUJ1Msh5M/luk1OZIKKIZ12pR86qaK01p4irc39/jVx2+5Jb6JuKkwuLkC3IIA0331AIBk3FsYIweUCzjf6pfVIl8M0fSZ+UveOTNwrOXpIw/RG3KNk20ZNE92zSZ8K5CLciM6t9sB6tX4UvTG2gwpSq33ThDpv8u8Azv5IjB51ZQa76VNEKYZLAj4YOW8gTV0a/L8YE4rUC09I8fMWZxsoOVnLtvm3E+qyOsspIkMYxaHYYs+Ply/WCTc5V53+4tL6Pn+HtXQ+2klSPYPM3K8XYTTcDc9fjAQwcvBCN/2wMHB3UHcPA1T0J/hc5yWNMaomN/KIK6w7vyd2taBAJECkGEgC6M+UNgSwkxoUlbbCMytYRWv24gUE+nttVyoJnyJCUUJ5OrfAx/TpdZK2nd9OR8+6yZ/mKqh1HG9DSKaWm44vj8fWoHh8D86jqIpNSIo7+Yzuz3T8uxJ5MekDeuiSKeKuyb1ouo=
+  on:
+    tags: true
+    condition: $TRAVIS_OS_NAME = "linux"
+  distributions: sdist bdist_wheel
+  repo: repobee/repobee
+  skip_existing: true

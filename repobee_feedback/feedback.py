@@ -27,7 +27,7 @@ def callback(args: argparse.Namespace, api: plug.API) -> None:
     repo_names = plug.generate_repo_names(
         args.students, args.master_repo_names
     )
-    if "multi_issues_file" in args:
+    if "multi_issues_file" in args and args.multi_issues_file is not None:
         issues_file = pathlib.Path(args.multi_issues_file).resolve()
         issues = _parse_multi_issues_file(issues_file)
     else:

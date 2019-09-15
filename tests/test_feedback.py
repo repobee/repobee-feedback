@@ -59,6 +59,7 @@ def parsed_args_issues_dir(tmp_path):
         master_repo_names=list(MASTER_REPO_NAMES),
         batch_mode=True,
         issues_dir=str(tmp_path),
+        multi_issues_file=None,
     )
 
 
@@ -69,6 +70,7 @@ def parsed_args_multi_issues_file(with_multi_issues_file):
         students=list(STUDENT_TEAMS),
         master_repo_names=list(MASTER_REPO_NAMES),
         batch_mode=True,
+        issues_dir=None,
         multi_issues_file=str(issues_file),
     )
 

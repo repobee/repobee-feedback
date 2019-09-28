@@ -195,3 +195,28 @@ class TestCallback:
         feedback.callback(args=parsed_args_multi_issues_file, api=api_mock)
 
         api_mock.open_issue.assert_has_calls(expected_calls)
+
+    def test_skips_unexpected_issues_in_multi_issues_file(
+        self, with_multi_issues_file, parsed_args_multi_issues_file, api_mock
+    ):
+        """Test that an exception is raised if one or more issues are found
+        relating to student repos that ar not in prod(master_repo_names, students).
+        """
+        student_teams = parsed_args_multi_issues_file.students
+        args_dict = vars(parsed_args_multi_issues_file)
+        args_dict["students"] = student_teams[:-1]
+        args = argparse.Namespace(**args_dict)
+        unexpected_repos = plug.generate_repo_names(
+            student_teams[-1:], MASTER_REPO_NAMES
+        )
+
+        _, repos_and_issues = with_multi_issues_file
+        expected_calls = [
+            mock.call(issue.title, issue.body, [repo_name])
+            for repo_name, issue in repos_and_issues
+            if repo_name not in unexpected_repos
+        ]
+
+        feedback.callback(args=args, api=api_mock)
+
+        assert sorted(expected_calls) == sorted(api_mock.open_issue.mock_calls)

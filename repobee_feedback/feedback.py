@@ -24,9 +24,7 @@ BEGIN_ISSUE_PATTERN = r"#ISSUE#(.*?)#(.*)"
 
 
 def callback(args: argparse.Namespace, api: plug.API) -> None:
-    repo_names = plug.generate_repo_names(
-        args.students, args.master_repo_names
-    )
+    repo_names = plug.generate_repo_names(args.students, args.master_repo_names)
     if "multi_issues_file" in args and args.multi_issues_file is not None:
         issues_file = pathlib.Path(args.multi_issues_file).resolve()
         issues = _parse_multi_issues_file(issues_file)
@@ -35,7 +33,9 @@ def callback(args: argparse.Namespace, api: plug.API) -> None:
         issues = _collect_issues(repo_names, issues_dir)
     _raise_on_missing_issue_file(issues, repo_names)
     for repo_name, issue in issues:
-        open_issue = args.batch_mode or _ask_for_open(issue, repo_name)
+        open_issue = args.batch_mode or _ask_for_open(
+            issue, repo_name, args.truncation_length
+        )
         if open_issue:
             api.open_issue(issue.title, issue.body, [repo_name])
         else:
@@ -50,6 +50,18 @@ class FeedbackCommand(plug.Plugin):
             "--batch-mode",
             help="Run without any yes/no promts.",
             action="store_true",
+        )
+        parser.add_argument(
+            "--tl",
+            "--truncation-length",
+            help=(
+                "In interactive mode, truncates the body of an issue at this "
+                "many characters. If not specified, issue bodies are shown in "
+                "full."
+            ),
+            dest="truncation_length",
+            type=int,
+            default=sys.maxsize,
         )
         issues_grp = parser.add_mutually_exclusive_group(required=True)
         issues_grp.add_argument(
@@ -99,8 +111,7 @@ class FeedbackCommand(plug.Plugin):
         )
 
 
-def _ask_for_open(issue: plug.Issue, repo_name: str) -> bool:
-    trunc_len = 50
+def _ask_for_open(issue: plug.Issue, repo_name: str, trunc_len: int) -> bool:
     LOGGER.info(
         'Processing issue "{}" for {}: {}{}'.format(
             issue.title,
@@ -110,9 +121,7 @@ def _ask_for_open(issue: plug.Issue, repo_name: str) -> bool:
         )
     )
     return (
-        input(
-            'Open issue "{}" in repo {}? (y/n) '.format(issue.title, repo_name)
-        )
+        input('Open issue "{}" in repo {}? (y/n) '.format(issue.title, repo_name))
         == "y"
     )
 
@@ -145,15 +154,11 @@ def _read_issue(issue_path: pathlib.Path) -> plug.Issue:
 def _parse_multi_issues_file(
     issues_file: pathlib.Path
 ) -> Iterable[Tuple[str, plug.Issue]]:
-    with open(
-        str(issues_file), mode="r", encoding=sys.getdefaultencoding()
-    ) as file:
+    with open(str(issues_file), mode="r", encoding=sys.getdefaultencoding()) as file:
         lines = list(file.readlines())
 
     if not lines or not re.match(BEGIN_ISSUE_PATTERN, lines[0], re.IGNORECASE):
-        raise plug.PlugError(
-            "first line of multi issues file not #ISSUE# line"
-        )
+        raise plug.PlugError("first line of multi issues file not #ISSUE# line")
 
     issue_blocks = _extract_issue_blocks(lines)
     return list(_extract_issues(issue_blocks, lines))

@@ -60,6 +60,7 @@ def parsed_args_issues_dir(tmp_path):
         batch_mode=True,
         issues_dir=str(tmp_path),
         multi_issues_file=None,
+        truncation_length=50,
     )
 
 
@@ -72,6 +73,7 @@ def parsed_args_multi_issues_file(with_multi_issues_file):
         batch_mode=True,
         issues_dir=None,
         multi_issues_file=str(issues_file),
+        truncation_length=50,
     )
 
 

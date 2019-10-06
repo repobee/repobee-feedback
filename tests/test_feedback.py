@@ -61,6 +61,7 @@ def parsed_args_issues_dir(tmp_path):
         issues_dir=str(tmp_path),
         multi_issues_file=None,
         truncation_length=50,
+        allow_missing=False,
     )
 
 
@@ -74,6 +75,7 @@ def parsed_args_multi_issues_file(with_multi_issues_file):
         issues_dir=None,
         multi_issues_file=str(issues_file),
         truncation_length=50,
+        allow_missing=False,
     )
 
 
@@ -164,6 +166,27 @@ class TestCallback:
 
         assert repo_without_issue in str(exc_info.value)
         assert not api_mock.open_issue.called
+
+    def test_ignores_missing_issue_if_allow_missing(
+        self, with_issues, parsed_args_issues_dir, api_mock, tmp_path
+    ):
+        """Test that missing issues are ignored if --allow-mising is set."""
+        repo_without_issue = plug.generate_repo_name(
+            STUDENT_TEAM_NAMES[-1], MASTER_REPO_NAMES[0]
+        )
+        (tmp_path / "{}.md".format(repo_without_issue)).unlink()
+        expected_calls = [
+            mock.call(issue.title, issue.body, [repo_name])
+            for repo_name, issue in with_issues
+            if repo_name != repo_without_issue
+        ]
+        args_dict = vars(parsed_args_issues_dir)
+        args_dict["allow_missing"] = True
+        args = argparse.Namespace(**args_dict)
+
+        feedback.callback(args=args, api=api_mock)
+
+        api_mock.open_issue.assert_has_calls(expected_calls, any_order=True)
 
     def test_opens_nothing_if_open_prompt_returns_false(
         self, with_issues, parsed_args_issues_dir, api_mock

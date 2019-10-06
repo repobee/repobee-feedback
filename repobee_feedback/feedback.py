@@ -24,14 +24,18 @@ BEGIN_ISSUE_PATTERN = r"#ISSUE#(.*?)#(.*)"
 
 
 def callback(args: argparse.Namespace, api: plug.API) -> None:
-    repo_names = plug.generate_repo_names(args.students, args.master_repo_names)
+    repo_names = plug.generate_repo_names(
+        args.students, args.master_repo_names
+    )
     if "multi_issues_file" in args and args.multi_issues_file is not None:
         issues_file = pathlib.Path(args.multi_issues_file).resolve()
         all_issues = _parse_multi_issues_file(issues_file)
     else:
         issues_dir = pathlib.Path(args.issues_dir).resolve()
         all_issues = _collect_issues(repo_names, issues_dir)
-    issues = _extract_expected_issues(all_issues, repo_names)
+    issues = _extract_expected_issues(
+        all_issues, repo_names, args.allow_missing
+    )
     for repo_name, issue in issues:
         open_issue = args.batch_mode or _ask_for_open(
             issue, repo_name, args.truncation_length
@@ -92,6 +96,12 @@ class FeedbackCommand(plug.Plugin):
                 "be an #ISSUE# line."
             ),
         )
+        parser.add_argument(
+            "--allow-missing",
+            help="Emit a warning (instead of crashing) on missing issues.",
+            action="store_true",
+            default=False,
+        )
         return plug.ExtensionCommand(
             parser=parser,
             name="issue-feedback",
@@ -121,13 +131,15 @@ def _ask_for_open(issue: plug.Issue, repo_name: str, trunc_len: int) -> bool:
         )
     )
     return (
-        input('Open issue "{}" in repo {}? (y/n) '.format(issue.title, repo_name))
+        input(
+            'Open issue "{}" in repo {}? (y/n) '.format(issue.title, repo_name)
+        )
         == "y"
     )
 
 
 def _extract_expected_issues(
-    repos_and_issues, repo_names
+    repos_and_issues, repo_names, allow_missing
 ) -> List[Tuple[str, plug.Issue]]:
     expected_repo_names = set(repo_names)
     expected_repos_and_issues = [
@@ -139,7 +151,11 @@ def _extract_expected_issues(
         (repo_name for repo_name, _ in expected_repos_and_issues)
     )
     if missing_repos:
-        raise plug.PlugError("Missing issues for: " + ", ".join(missing_repos))
+        msg = "Missing issues for: " + ", ".join(missing_repos)
+        if allow_missing:
+            LOGGER.warning(msg)
+        else:
+            raise plug.PlugError(msg)
 
     return expected_repos_and_issues
 
@@ -164,11 +180,15 @@ def _read_issue(issue_path: pathlib.Path) -> plug.Issue:
 def _parse_multi_issues_file(
     issues_file: pathlib.Path
 ) -> Iterable[Tuple[str, plug.Issue]]:
-    with open(str(issues_file), mode="r", encoding=sys.getdefaultencoding()) as file:
+    with open(
+        str(issues_file), mode="r", encoding=sys.getdefaultencoding()
+    ) as file:
         lines = list(file.readlines())
 
     if not lines or not re.match(BEGIN_ISSUE_PATTERN, lines[0], re.IGNORECASE):
-        raise plug.PlugError("first line of multi issues file not #ISSUE# line")
+        raise plug.PlugError(
+            "first line of multi issues file not #ISSUE# line"
+        )
 
     issue_blocks = _extract_issue_blocks(lines)
     return list(_extract_issues(issue_blocks, lines))

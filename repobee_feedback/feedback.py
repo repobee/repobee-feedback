@@ -57,24 +57,24 @@ def callback(args: argparse.Namespace, api: plug.PlatformAPI) -> None:
 class Feedback(plug.Plugin, plug.cli.Command):
     __settings__ = plug.cli.command_settings(
         help="issue feedback to students",
-        description="Collect issues from specified ´issue files´ "
+        description="Collect issues from specified issue files "
         "to create issues in students repos.",
         category=plug.cli.CoreCommand.issues,
         action="feedback",
     )
 
     allow_missing = plug.cli.flag(
-        help="Emit a warning (instead of crashing) on missing issues.",
+        help="emit a warning (instead of crashing) on missing issues",
     )
     batch_mode = plug.cli.flag(
-        short_name="-b", help="Run without any yes/no promts.",
+        short_name="-b", help="run without any yes/no promts",
     )
     truncation_length = plug.cli.option(
         short_name="--tl",
         help=(
-            "In interactive mode, truncates the body of an issue at this "
+            "in interactive mode, truncates the body of an issue at this "
             "many characters. If not specified, issue bodies are shown in "
-            "full."
+            "full"
         ),
         converter=int,
         default=sys.maxsize,
@@ -84,11 +84,11 @@ class Feedback(plug.Plugin, plug.cli.Command):
         issues_dir=plug.cli.option(
             short_name="--id",
             help=(
-                "Directory containing issue files. The files should be "
+                "directory containing issue files. The files should be "
                 "named <STUDENT_REPO_NAME>.md (for example, "
                 "slarse-task-1.md). The first line is assumed to be the "
                 "title, and the rest the body. Defaults to the current "
-                "directory."
+                "directory"
             ),
             converter=pathlib.Path,
             default=".",
@@ -96,13 +96,13 @@ class Feedback(plug.Plugin, plug.cli.Command):
         issues_grp=plug.cli.option(
             short_name="--mi",
             help=(
-                "File containing all issues to be openend. Each separate "
+                "file containing all issues to be openend. Each separate "
                 "issue should begin with a line containing only "
                 "#ISSUE#<STUDENT_REPO_NAME>#<ISSUE_TITLE>. For example, for "
                 "student `slarse` and assignment `task-1` and issue title "
                 "`Pass`, the line should read `#ISSUE#slarse-task-1#Pass` "
                 "(without backticks). The very first line of the file must "
-                "be an #ISSUE# line."
+                "be an #ISSUE# line"
             ),
             converter=pathlib.Path,
         ),

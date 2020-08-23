@@ -13,7 +13,7 @@ from repobee_feedback import feedback
 MASTER_REPO_NAMES = ("task-1", "task-2")
 STUDENT_TEAMS = tuple(
     [
-        plug.Team(members=members)
+        plug.StudentTeam(members=members)
         for members in (["slarse"], ["glassey"], ["grundb", "glennol"])
     ]
 )

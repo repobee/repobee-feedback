@@ -23,16 +23,23 @@ LOGGER = daiquiri.getLogger(__file__)
 BEGIN_ISSUE_PATTERN = r"#ISSUE#(.*?)#(.*)"
 
 
-def callback(args: argparse.Namespace, api: plug.API) -> None:
-    repo_names = plug.generate_repo_names(
-        args.students, args.master_repo_names
-    )
+def callback(args: argparse.Namespace, api: plug.PlatformAPI) -> None:
+    repo_name_to_team = {
+        plug.generate_repo_name(
+            student_team.name, master_repo_name
+        ): student_team
+        for student_team in args.students
+        for master_repo_name in args.master_repo_names
+    }
+    repo_names = list(repo_name_to_team.keys())
+
     if "multi_issues_file" in args and args.multi_issues_file is not None:
         issues_file = pathlib.Path(args.multi_issues_file).resolve()
         all_issues = _parse_multi_issues_file(issues_file)
     else:
         issues_dir = pathlib.Path(args.issues_dir).resolve()
         all_issues = _collect_issues(repo_names, issues_dir)
+
     issues = _extract_expected_issues(
         all_issues, repo_names, args.allow_missing
     )
@@ -41,84 +48,69 @@ def callback(args: argparse.Namespace, api: plug.API) -> None:
             issue, repo_name, args.truncation_length
         )
         if open_issue:
-            api.open_issue(issue.title, issue.body, [repo_name])
+            repo = api.get_repo(repo_name, repo_name_to_team[repo_name])
+            api.create_issue(issue.title, issue.body, repo)
         else:
             LOGGER.info("Skipping {}".format(repo_name))
 
 
-class FeedbackCommand(plug.Plugin):
-    def create_extension_command(self):
-        parser = plug.ExtensionParser()
-        parser.add_argument(
-            "-b",
-            "--batch-mode",
-            help="Run without any yes/no promts.",
-            action="store_true",
-        )
-        parser.add_argument(
-            "--tl",
-            "--truncation-length",
+class Feedback(plug.Plugin, plug.cli.Command):
+    __settings__ = plug.cli.command_settings(
+        help="issue feedback to students",
+        description="Collect issues from specified issue files "
+        "to create issues in students repos.",
+        category=plug.cli.CoreCommand.issues,
+        action="feedback",
+    )
+
+    allow_missing = plug.cli.flag(
+        help="emit a warning (instead of crashing) on missing issues",
+    )
+    batch_mode = plug.cli.flag(
+        short_name="-b", help="run without any yes/no promts",
+    )
+    truncation_length = plug.cli.option(
+        short_name="--tl",
+        help=(
+            "in interactive mode, truncates the body of an issue at this "
+            "many characters. If not specified, issue bodies are shown in "
+            "full"
+        ),
+        converter=int,
+        default=sys.maxsize,
+    )
+
+    group_mutex = plug.cli.mutually_exclusive_group(
+        issues_dir=plug.cli.option(
+            short_name="--id",
             help=(
-                "In interactive mode, truncates the body of an issue at this "
-                "many characters. If not specified, issue bodies are shown in "
-                "full."
-            ),
-            dest="truncation_length",
-            type=int,
-            default=sys.maxsize,
-        )
-        issues_grp = parser.add_mutually_exclusive_group(required=True)
-        issues_grp.add_argument(
-            "--id",
-            "--issues-dir",
-            help=(
-                "Directory containing issue files. The files should be "
+                "directory containing issue files. The files should be "
                 "named <STUDENT_REPO_NAME>.md (for example, "
                 "slarse-task-1.md). The first line is assumed to be the "
                 "title, and the rest the body. Defaults to the current "
-                "directory."
+                "directory"
             ),
-            dest="issues_dir",
-            type=str,
+            converter=pathlib.Path,
             default=".",
-        )
-        issues_grp.add_argument(
-            "--mi",
-            "--multi-issues-file",
-            dest="multi_issues_file",
+        ),
+        issues_grp=plug.cli.option(
+            short_name="--mi",
             help=(
-                "File containing all issues to be openend. Each separate "
+                "file containing all issues to be openend. Each separate "
                 "issue should begin with a line containing only "
                 "#ISSUE#<STUDENT_REPO_NAME>#<ISSUE_TITLE>. For example, for "
                 "student `slarse` and assignment `task-1` and issue title "
                 "`Pass`, the line should read `#ISSUE#slarse-task-1#Pass` "
                 "(without backticks). The very first line of the file must "
-                "be an #ISSUE# line."
+                "be an #ISSUE# line"
             ),
-        )
-        parser.add_argument(
-            "--allow-missing",
-            help="Emit a warning (instead of crashing) on missing issues.",
-            action="store_true",
-            default=False,
-        )
-        return plug.ExtensionCommand(
-            parser=parser,
-            name="issue-feedback",
-            help="Open issues in student repos based on local issue files.",
-            description=(
-                "Open issues in student repos based on local issue files. "
-                "Operates in two different modes, depending on if you "
-                "specify `--multi-issues-file` or `--issues-dir`. See the "
-                "description of those options for details."
-            ),
-            callback=callback,
-            requires_api=True,
-            requires_base_parsers=[
-                plug.BaseParser.REPO_NAMES,
-                plug.BaseParser.STUDENTS,
-            ],
-        )
+            converter=pathlib.Path,
+        ),
+        __required__=True,
+    )
+
+    def command(self, api: plug.PlatformAPI):
+        callback(self.args, api)
 
 
 def _ask_for_open(issue: plug.Issue, repo_name: str, trunc_len: int) -> bool:
@@ -178,7 +170,7 @@ def _read_issue(issue_path: pathlib.Path) -> plug.Issue:
 
 
 def _parse_multi_issues_file(
-    issues_file: pathlib.Path
+    issues_file: pathlib.Path,
 ) -> Iterable[Tuple[str, plug.Issue]]:
     with open(
         str(issues_file), mode="r", encoding=sys.getdefaultencoding()

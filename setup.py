@@ -11,7 +11,7 @@ with open("repobee_feedback/__version.py", mode="r", encoding="utf-8") as f:
     assert re.match(r"^\d+(\.\d+){2}(-(alpha|beta|rc)(\.\d+)?)?$", __version__)
 
 test_requirements = ["pytest", "pytest-cov", "repobee", "codecov"]
-required = ["repobee-plug>=0.10.0", "daiquiri"]
+required = ["repobee>=3.0.0-beta.1"]
 
 setup(
     name="repobee-feedback",

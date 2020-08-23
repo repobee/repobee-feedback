@@ -13,7 +13,7 @@ from repobee_feedback import feedback
 MASTER_REPO_NAMES = ("task-1", "task-2")
 STUDENT_TEAMS = tuple(
     [
-        plug.Team(members=members)
+        plug.StudentTeam(members=members)
         for members in (["slarse"], ["glassey"], ["grundb", "glennol"])
     ]
 )
@@ -81,7 +81,7 @@ def parsed_args_multi_issues_file(with_multi_issues_file):
 
 @pytest.fixture
 def api_mock():
-    return mock.MagicMock(spec=plug.API)
+    return mock.MagicMock(spec=plug.PlatformAPI)
 
 
 @pytest.fixture
@@ -115,22 +115,6 @@ def with_multi_issues_file(tmp_path):
     return issues_file, repos_and_issues
 
 
-class TestFeedbackCommand:
-    def test_init(self):
-        cmd = feedback.FeedbackCommand()
-        assert isinstance(cmd, plug.Plugin)
-
-    def test_create_extension_command(self):
-        cmd = feedback.FeedbackCommand()
-        ext = cmd.create_extension_command()
-
-        assert isinstance(ext.parser, argparse.ArgumentParser)
-        assert ext.name == "issue-feedback"
-        assert ext.callback == feedback.callback
-        assert ext.requires_api
-        assert ext.requires_base_parsers
-
-
 class TestCallback:
     """Tests for the primary callback."""
 
@@ -141,13 +125,13 @@ class TestCallback:
         repos and issues, when the issues all exist and are well formed.
         """
         expected_calls = [
-            mock.call(issue.title, issue.body, [repo_name])
+            mock.call(issue.title, issue.body, mock.ANY)
             for repo_name, issue in with_issues
         ]
 
         feedback.callback(args=parsed_args_issues_dir, api=api_mock)
 
-        api_mock.open_issue.assert_has_calls(expected_calls, any_order=True)
+        api_mock.create_issue.assert_has_calls(expected_calls, any_order=True)
 
     def test_aborts_if_issue_is_missing(
         self, with_issues, parsed_args_issues_dir, api_mock, tmp_path
@@ -165,7 +149,7 @@ class TestCallback:
             feedback.callback(args=parsed_args_issues_dir, api=api_mock)
 
         assert repo_without_issue in str(exc_info.value)
-        assert not api_mock.open_issue.called
+        assert not api_mock.create_issue.called
 
     def test_ignores_missing_issue_if_allow_missing(
         self, with_issues, parsed_args_issues_dir, api_mock, tmp_path
@@ -176,7 +160,7 @@ class TestCallback:
         )
         (tmp_path / "{}.md".format(repo_without_issue)).unlink()
         expected_calls = [
-            mock.call(issue.title, issue.body, [repo_name])
+            mock.call(issue.title, issue.body, mock.ANY)
             for repo_name, issue in with_issues
             if repo_name != repo_without_issue
         ]
@@ -186,7 +170,7 @@ class TestCallback:
 
         feedback.callback(args=args, api=api_mock)
 
-        api_mock.open_issue.assert_has_calls(expected_calls, any_order=True)
+        api_mock.create_issue.assert_has_calls(expected_calls, any_order=True)
 
     def test_opens_nothing_if_open_prompt_returns_false(
         self, with_issues, parsed_args_issues_dir, api_mock
@@ -201,7 +185,7 @@ class TestCallback:
         with mock.patch("builtins.input", return_value="n", autospec=True):
             feedback.callback(args=parsed_args_interactive, api=api_mock)
 
-        assert not api_mock.open_issue.called
+        assert not api_mock.create_issue.called
 
     def test_opens_issues_from_multi_issues_file(
         self, with_multi_issues_file, api_mock, parsed_args_multi_issues_file
@@ -211,13 +195,13 @@ class TestCallback:
         """
         issues_file, repos_and_issues = with_multi_issues_file
         expected_calls = [
-            mock.call(issue.title, issue.body, [repo_name])
+            mock.call(issue.title, issue.body, mock.ANY)
             for repo_name, issue in repos_and_issues
         ]
 
         feedback.callback(args=parsed_args_multi_issues_file, api=api_mock)
 
-        api_mock.open_issue.assert_has_calls(expected_calls)
+        api_mock.create_issue.assert_has_calls(expected_calls)
 
     def test_skips_unexpected_issues_in_multi_issues_file(
         self, with_multi_issues_file, parsed_args_multi_issues_file, api_mock
@@ -235,11 +219,11 @@ class TestCallback:
 
         _, repos_and_issues = with_multi_issues_file
         expected_calls = [
-            mock.call(issue.title, issue.body, [repo_name])
+            mock.call(issue.title, issue.body, mock.ANY)
             for repo_name, issue in repos_and_issues
             if repo_name not in unexpected_repos
         ]
 
         feedback.callback(args=args, api=api_mock)
 
-        assert sorted(expected_calls) == sorted(api_mock.open_issue.mock_calls)
+        api_mock.create_issue.assert_has_calls(expected_calls, any_order=True)

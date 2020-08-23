@@ -1,2 +1,1 @@
-repobee_plug>=0.10.0
-daiquiri
+repobee>=3.0.0-beta.1

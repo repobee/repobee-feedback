@@ -10,7 +10,7 @@ import repobee_plug as plug
 
 from repobee_feedback import feedback
 
-MASTER_REPO_NAMES = ("task-1", "task-2")
+ASSIGNMENT_NAMES = ("task-1", "task-2")
 STUDENT_TEAMS = tuple(
     [
         plug.StudentTeam(members=members)
@@ -56,7 +56,7 @@ def test_register():
 def parsed_args_issues_dir(tmp_path):
     return argparse.Namespace(
         students=list(STUDENT_TEAMS),
-        master_repo_names=list(MASTER_REPO_NAMES),
+        assignments=list(ASSIGNMENT_NAMES),
         batch_mode=True,
         issues_dir=str(tmp_path),
         multi_issues_file=None,
@@ -70,7 +70,7 @@ def parsed_args_multi_issues_file(with_multi_issues_file):
     issues_file, _ = with_multi_issues_file
     return argparse.Namespace(
         students=list(STUDENT_TEAMS),
-        master_repo_names=list(MASTER_REPO_NAMES),
+        assignments=list(ASSIGNMENT_NAMES),
         batch_mode=True,
         issues_dir=None,
         multi_issues_file=str(issues_file),
@@ -90,7 +90,7 @@ def with_issues(tmp_path):
     issue) tuples.
     """
     repo_names = plug.generate_repo_names(
-        STUDENT_TEAM_NAMES, MASTER_REPO_NAMES
+        STUDENT_TEAM_NAMES, ASSIGNMENT_NAMES
     )
     existing_issues = []
     for repo_name in repo_names:
@@ -105,7 +105,7 @@ def with_issues(tmp_path):
 def with_multi_issues_file(tmp_path):
     """Create the multi issues file."""
     repo_names = plug.generate_repo_names(
-        STUDENT_TEAM_NAMES, MASTER_REPO_NAMES
+        STUDENT_TEAM_NAMES, ASSIGNMENT_NAMES
     )
     repos_and_issues = [
         (repo_name, random.choice(ISSUES)) for repo_name in repo_names
@@ -140,7 +140,7 @@ class TestCallback:
         expected issues is not found.
         """
         repo_without_issue = plug.generate_repo_name(
-            STUDENT_TEAM_NAMES[-1], MASTER_REPO_NAMES[0]
+            STUDENT_TEAM_NAMES[-1], ASSIGNMENT_NAMES[0]
         )
         missing_file = tmp_path / "{}.md".format(repo_without_issue)
         missing_file.unlink()
@@ -156,7 +156,7 @@ class TestCallback:
     ):
         """Test that missing issues are ignored if --allow-mising is set."""
         repo_without_issue = plug.generate_repo_name(
-            STUDENT_TEAM_NAMES[-1], MASTER_REPO_NAMES[0]
+            STUDENT_TEAM_NAMES[-1], ASSIGNMENT_NAMES[0]
         )
         (tmp_path / "{}.md".format(repo_without_issue)).unlink()
         expected_calls = [
@@ -207,14 +207,14 @@ class TestCallback:
         self, with_multi_issues_file, parsed_args_multi_issues_file, api_mock
     ):
         """Test that an exception is raised if one or more issues are found
-        relating to student repos that ar not in prod(master_repo_names, students).
+        relating to student repos that ar not in prod(assignments, students).
         """
         student_teams = parsed_args_multi_issues_file.students
         args_dict = vars(parsed_args_multi_issues_file)
         args_dict["students"] = student_teams[:-1]
         args = argparse.Namespace(**args_dict)
         unexpected_repos = plug.generate_repo_names(
-            student_teams[-1:], MASTER_REPO_NAMES
+            student_teams[-1:], ASSIGNMENT_NAMES
         )
 
         _, repos_and_issues = with_multi_issues_file

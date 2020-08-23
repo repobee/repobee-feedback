@@ -26,10 +26,10 @@ BEGIN_ISSUE_PATTERN = r"#ISSUE#(.*?)#(.*)"
 def callback(args: argparse.Namespace, api: plug.PlatformAPI) -> None:
     repo_name_to_team = {
         plug.generate_repo_name(
-            student_team.name, master_repo_name
+            student_team.name, assignment_name
         ): student_team
         for student_team in args.students
-        for master_repo_name in args.master_repo_names
+        for assignment_name in args.assignments
     }
     repo_names = list(repo_name_to_team.keys())
 

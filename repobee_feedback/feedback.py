@@ -56,9 +56,12 @@ def callback(args: argparse.Namespace, api: plug.PlatformAPI) -> None:
 
 class Feedback(plug.Plugin, plug.cli.Command):
     __settings__ = plug.cli.command_settings(
-        help="issue feedback to students",
-        description="Collect issues from specified issue files "
-        "to create issues in students repos.",
+        help="open feedback issues in student repos",
+        description="Collect issues from issue files "
+        "to create issues in students repos. Alternatively, all issues can "
+        "written in a single multi-issues file. See "
+        "https://github.com/repobee/repobee-feedback for detailed information"
+        "on the format of the issue files.",
         category=plug.cli.CoreCommand.issues,
         action="feedback",
     )
@@ -72,9 +75,8 @@ class Feedback(plug.Plugin, plug.cli.Command):
     truncation_length = plug.cli.option(
         short_name="--tl",
         help=(
-            "in interactive mode, truncates the body of an issue at this "
-            "many characters. If not specified, issue bodies are shown in "
-            "full"
+            "in interactive mode, truncates the body of an issue to this "
+            "many characters"
         ),
         converter=int,
         default=sys.maxsize,
@@ -84,11 +86,9 @@ class Feedback(plug.Plugin, plug.cli.Command):
         issues_dir=plug.cli.option(
             short_name="--id",
             help=(
-                "directory containing issue files. The files should be "
-                "named <STUDENT_REPO_NAME>.md (for example, "
-                "slarse-task-1.md). The first line is assumed to be the "
-                "title, and the rest the body. Defaults to the current "
-                "directory"
+                "directory containing issue files "
+                "named <STUDENT_REPO_NAME>.md, in which the first line is "
+                "assumed to be the title"
             ),
             converter=pathlib.Path,
             default=".",
@@ -96,13 +96,9 @@ class Feedback(plug.Plugin, plug.cli.Command):
         issues_grp=plug.cli.option(
             short_name="--mi",
             help=(
-                "file containing all issues to be openend. Each separate "
-                "issue should begin with a line containing only "
-                "#ISSUE#<STUDENT_REPO_NAME>#<ISSUE_TITLE>. For example, for "
-                "student `slarse` and assignment `task-1` and issue title "
-                "`Pass`, the line should read `#ISSUE#slarse-task-1#Pass` "
-                "(without backticks). The very first line of the file must "
-                "be an #ISSUE# line"
+                "file containing issues to be opened, where each separate "
+                "issue starts with the line "
+                "#ISSUE#<STUDENT_REPO_NAME>#<ISSUE_TITLE>, followed by its body"
             ),
             converter=pathlib.Path,
         ),

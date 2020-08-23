@@ -7,6 +7,9 @@
 [![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 [![Code Style: Black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
 
+> **repobee-feedback v0.6.0 requires RepoBee 3:** As of `repobee-feedback`
+> v0.6.0, RepoBee 3+ is required.
+
 A [RepoBee](https://github.com/repobee/repobee) plugin that adds the
 `feedback` to to RepoBee's `issues` category. It allows the user to specify a
 directory containing _issue files_. Issue files are simply markdown files in

@@ -8,55 +8,37 @@
 [![Code Style: Black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
 
 A [RepoBee](https://github.com/repobee/repobee) plugin that adds the
-`issue-feedback` command to RepoBee. It allows the user to specify a
-directory containing _issue files_. Issue files are simply markdown
-files in which the first line is taken to be the title of the issue, and the
-rest the body. The `issue-feedback` command looks for issue files called
+`feedback` to to RepoBee's `issues` category. It allows the user to specify a
+directory containing _issue files_. Issue files are simply markdown files in
+which the first line is taken to be the title of the issue, and the rest the
+body. The `feedback` command looks for issue files called
 `<STUDENT_REPO_NAME>.md`, and opens them in the respective student repos.
 
 Alternatively, you can also use a special file format to put all issues into
 the same file, see [The multi issues file](#the-multi-issues-file).
 
-> **Important:** This plugin is still in very early stages and may change
-> considerably over the coming weeks.
+> **How is `feedback` different from `issues open`?** The ``issues open``
+> command opens the same issue in all student repositories, while the
+> ``feedback`` action allows for unique issues to be opened in each repository.
 
 ## Install
-`repobee-feedback` is on PyPi, so installing is as simple as:
+Use RepoBee's plugin manager to install.
 
-```
-python3 -m pip install --user --upgrade repobee-feedback
-```
-
-If you want the latest dev-build, you can also install directly from the repo:
-
-```
-$ python3 -m pip install git+https://github.com/repobee/repobee-feedback.git
+```bash
+$ repobee plugin install
 ```
 
 ## Usage
-
-### Activate the plugin
-To use `repobee-feedback`, you first need to [install it](#Install), and then
-activate it as a plugin. You can do that either by providing it on the command
-line:
-
-```
-$ repobee -p feedback issue-feedback [...]
-```
-
-Or, you can add it to the `plugins` section of the config file.
-
-```
-[DEFAULTS]
-plugins = feedback
-```
-
-And then the `issue-feedback` command will simply appear. For more details on
-using plugins, see the
-[RepoBee plugin docs](https://repobee.readthedocs.io/en/stable/plugins.html#using-existing-plugins).
+When active, the `feedback` plugin adds the `feedback` action to the `issues` category.
+We recommend activating the `feedback` plugin persistently with `repobee plugin
+activate`, such that the action is always available. See the [RepoBee plugin
+docs](https://repobee.readthedocs.io/en/stable/plugins.html#using-existing-plugins)
+for general information on how to use installed plugins, including activation
+and deactivation. The rest of this section assumes that the `feedback` plugin has
+been activated persistently.
 
 ### The issue files
-`issue-feedback` looks for files called `<STUDENT_REPO_NAME>.md`. So, if you for
+`feedback` looks for files called `<STUDENT_REPO_NAME>.md`. So, if you for
 example want to open feedback issues for students `slarse` and `rjglasse` for
 assignment `task-1`, it will expect the files `slarse-task-1.md` and
 `rjglasse-task-1.md` to be present in the issue files directory. More files can
@@ -92,46 +74,29 @@ Could you explain it better?
 
 > **Note:** The first line of the multi issues file must be an `#ISSUE#` line.
 
-### Using the `issue-feedback` command
-The `issue-feedback` command is straightforward. It takes the "regular" options
+### Using the `feedback` command
+The `feedback` command is straightforward. It takes the "regular" options
 that most RepoBee commands (base url, token, etc), but these are also picked
 from the config file as per usual. With a typical RepoBee configuration, you
-only need to supply `--mn|--master-repo-names` and `-s|--students` (or
+only need to supply `-a|--assignments` and `-s|--students` (or
 `--sf|--students_file`). Here's an example:
 
 ```
-$ repobee -p feedback issue-feedback --mn task-1 -s slarse rjglasse
+$ repobee issues feedback -a task-1 -s slarse rjglasse
 ```
 
-This will cause `issue-feedback` to search through the current directory (which
+This will cause `feedback` to search through the current directory (which
 is the default issue directory) for `slarse-task-1.md` and `rjglasse-task-1.md`.
 
-> **Note:** By default, `issue-feedback` runs in interactive mode: it will
+> **Note:** By default, `feedback` runs in interactive mode: it will
 > prompt you `y/n` before opening an issue. See the next section for how to
 > disable that.
 
-### Optional arguments
-`issue-feedback` has three optional arguments: `-b|--batch-mode`,
-`--id|--issue-dir` and `--mi|--multi-issues-file`.
-
-> **Note:** `--id` and `--mi` are mutually exclusive, you can only supply one.
+Refer to the `feedback` action's help section for details on additional CLI options.
 
 ```
-  -b, --batch-mode      Run without any yes/no promts.
-  --id ISSUES_DIR, --issues-dir ISSUES_DIR
-                        Directory containing issue files. The files should be
-                        named <STUDENT_REPO_NAME>.md (for example, slarse-
-                        task-1.md). The first line is assumed to be the title,
-                        and the rest the body. Defaults to the current
-  --mi MULTI_ISSUES_FILE, --multi-issues-file MULTI_ISSUES_FILE
-                        File containing all issues to be openend. Each
-                        separate issue should begin with a line containing
-                        only #ISSUE#<STUDENT_REPO_NAME>#<ISSUE_TITLE>. For
-                        example, for student `slarse` and assignment `task-1`
-                        and issue title `Pass`, the line should read
-                        `#ISSUE#slarse-task-1#Pass` (without backticks). The
-                        very first line of the file must be an #ISSUE# line.
+$ repobee issues feedback --help
 ```
 
-# License
+## License
 See [LICENSE](LICENSE) for details.

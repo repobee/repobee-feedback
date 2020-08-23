@@ -18,8 +18,6 @@ import repobee_plug as plug
 
 PLUGIN_NAME = "feedback"
 
-LOGGER = daiquiri.getLogger(__file__)
-
 BEGIN_ISSUE_PATTERN = r"#ISSUE#(.*?)#(.*)"
 
 
@@ -51,7 +49,7 @@ def callback(args: argparse.Namespace, api: plug.PlatformAPI) -> None:
             repo = api.get_repo(repo_name, repo_name_to_team[repo_name])
             api.create_issue(issue.title, issue.body, repo)
         else:
-            LOGGER.info("Skipping {}".format(repo_name))
+            plug.echo("Skipping {}".format(repo_name))
 
 
 class Feedback(plug.Plugin, plug.cli.Command):
@@ -70,7 +68,7 @@ class Feedback(plug.Plugin, plug.cli.Command):
         help="emit a warning (instead of crashing) on missing issues",
     )
     batch_mode = plug.cli.flag(
-        short_name="-b", help="run without any yes/no promts",
+        short_name="-b", help="run without any yes/no prompts",
     )
     truncation_length = plug.cli.option(
         short_name="--tl",
@@ -110,7 +108,7 @@ class Feedback(plug.Plugin, plug.cli.Command):
 
 
 def _ask_for_open(issue: plug.Issue, repo_name: str, trunc_len: int) -> bool:
-    LOGGER.info(
+    plug.echo(
         'Processing issue "{}" for {}: {}{}'.format(
             issue.title,
             repo_name,
@@ -141,7 +139,7 @@ def _extract_expected_issues(
     if missing_repos:
         msg = "Missing issues for: " + ", ".join(missing_repos)
         if allow_missing:
-            LOGGER.warning(msg)
+            plug.log.warning(msg)
         else:
             raise plug.PlugError(msg)
 

@@ -62,6 +62,7 @@ class Feedback(plug.Plugin, plug.cli.Command):
         "on the format of the issue files.",
         category=plug.cli.CoreCommand.issues,
         action="feedback",
+        base_parsers=[plug.BaseParser.ASSIGNMENTS, plug.BaseParser.STUDENTS],
     )
 
     allow_missing = plug.cli.flag(
@@ -91,7 +92,7 @@ class Feedback(plug.Plugin, plug.cli.Command):
             converter=pathlib.Path,
             default=".",
         ),
-        issues_grp=plug.cli.option(
+        multi_issues_file=plug.cli.option(
             short_name="--mi",
             help=(
                 "file containing issues to be opened, where each separate "

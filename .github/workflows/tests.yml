@@ -38,7 +38,7 @@ jobs:
         python -m pip install --upgrade pip
         pip install -e .[TEST]
     - name: Run static analysis
-    - run: |
+      run: |
         black --check .
         flake8 --ignore=W503,E203
     - name: Test with pytest

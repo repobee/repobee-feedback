@@ -4,3 +4,4 @@ repobee
 codecov
 black
 flake8
+mypy

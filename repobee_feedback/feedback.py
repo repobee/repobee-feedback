@@ -192,10 +192,11 @@ def _extract_issue_blocks(lines: List[str]):
     return issue_blocks
 
 
-def _extract_issues(issue_blocks: Tuple[int, int], lines: List[str]):
+def _extract_issues(issue_blocks: Iterable[Tuple[int, int]], lines: List[str]):
     for begin, end in issue_blocks:
-        repo_name, title = re.match(
-            BEGIN_ISSUE_PATTERN, lines[begin], re.IGNORECASE
-        ).groups()
+        match = re.match(BEGIN_ISSUE_PATTERN, lines[begin], re.IGNORECASE)
+        assert match
+
+        repo_name, title = match.groups()
         body = "".join(lines[begin + 1 : end])
         yield (repo_name, plug.Issue(title=title.strip(), body=body.rstrip()))

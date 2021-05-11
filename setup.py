@@ -17,6 +17,7 @@ test_requirements = [
     "codecov",
     "black",
     "flake8",
+    "mypy",
 ]
 required = ["repobee>=3.0.0-beta.1"]
 

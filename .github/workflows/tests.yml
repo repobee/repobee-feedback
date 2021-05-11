@@ -41,6 +41,7 @@ jobs:
       run: |
         black --check .
         flake8 --ignore=W503,E203
+        mypy repobee_feedback
     - name: Test with pytest
       run: |
         coverage run --branch \

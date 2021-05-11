@@ -11,7 +11,7 @@ import pathlib
 import re
 import sys
 import argparse
-from typing import Iterable, Tuple, List
+from typing import Iterable, Tuple, List, Mapping
 
 import repobee_plug as plug
 
@@ -21,7 +21,7 @@ BEGIN_ISSUE_PATTERN = r"#ISSUE#(.*?)#(.*)"
 
 
 def callback(args: argparse.Namespace, api: plug.PlatformAPI) -> None:
-    repo_name_to_team = {
+    repo_name_to_team: Mapping[str, plug.StudentTeam] = {
         plug.generate_repo_name(
             student_team.name, assignment_name
         ): student_team
@@ -45,7 +45,7 @@ def callback(args: argparse.Namespace, api: plug.PlatformAPI) -> None:
             issue, repo_name, args.truncation_length
         )
         if open_issue:
-            repo = api.get_repo(repo_name, repo_name_to_team[repo_name])
+            repo = api.get_repo(repo_name, repo_name_to_team[repo_name].name)
             api.create_issue(issue.title, issue.body, repo)
         else:
             plug.echo("Skipping {}".format(repo_name))

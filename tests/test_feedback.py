@@ -89,9 +89,7 @@ def with_issues(tmp_path):
     """Create issue files in a temporary directory and return a list of (team,
     issue) tuples.
     """
-    repo_names = plug.generate_repo_names(
-        STUDENT_TEAM_NAMES, ASSIGNMENT_NAMES
-    )
+    repo_names = plug.generate_repo_names(STUDENT_TEAM_NAMES, ASSIGNMENT_NAMES)
     existing_issues = []
     for repo_name in repo_names:
         issue_file = tmp_path / "{}.md".format(repo_name)
@@ -104,9 +102,7 @@ def with_issues(tmp_path):
 @pytest.fixture
 def with_multi_issues_file(tmp_path):
     """Create the multi issues file."""
-    repo_names = plug.generate_repo_names(
-        STUDENT_TEAM_NAMES, ASSIGNMENT_NAMES
-    )
+    repo_names = plug.generate_repo_names(STUDENT_TEAM_NAMES, ASSIGNMENT_NAMES)
     repos_and_issues = [
         (repo_name, random.choice(ISSUES)) for repo_name in repo_names
     ]

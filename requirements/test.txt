@@ -2,3 +2,5 @@ pytest
 pytest-cov
 repobee
 codecov
+black
+flake8

@@ -10,7 +10,14 @@ with open("repobee_feedback/__version.py", mode="r", encoding="utf-8") as f:
     __version__ = line.split("=")[1].strip(" '\"\n")
     assert re.match(r"^\d+(\.\d+){2}(-(alpha|beta|rc)(\.\d+)?)?$", __version__)
 
-test_requirements = ["pytest", "pytest-cov", "repobee", "codecov"]
+test_requirements = [
+    "pytest",
+    "pytest-cov",
+    "repobee",
+    "codecov",
+    "black",
+    "flake8",
+]
 required = ["repobee>=3.0.0-beta.1"]
 
 setup(

@@ -13,7 +13,6 @@ import sys
 import argparse
 from typing import Iterable, Tuple, List
 
-import daiquiri
 import repobee_plug as plug
 
 PLUGIN_NAME = "feedback"
@@ -66,10 +65,10 @@ class Feedback(plug.Plugin, plug.cli.Command):
     )
 
     allow_missing = plug.cli.flag(
-        help="emit a warning (instead of crashing) on missing issues",
+        help="emit a warning (instead of crashing) on missing issues"
     )
     batch_mode = plug.cli.flag(
-        short_name="-b", help="run without any yes/no prompts",
+        short_name="-b", help="run without any yes/no prompts"
     )
     truncation_length = plug.cli.option(
         short_name="--tl",
@@ -97,7 +96,8 @@ class Feedback(plug.Plugin, plug.cli.Command):
             help=(
                 "file containing issues to be opened, where each separate "
                 "issue starts with the line "
-                "#ISSUE#<STUDENT_REPO_NAME>#<ISSUE_TITLE>, followed by its body"
+                "#ISSUE#<STUDENT_REPO_NAME>#<ISSUE_TITLE>, followed by its "
+                "body"
             ),
             converter=pathlib.Path,
         ),

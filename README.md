@@ -1,5 +1,5 @@
 # repobee-feedback
-[![Build Status](https://travis-ci.com/repobee/repobee-feedback.svg)](https://travis-ci.com/repobee/repobee-feedback)
+[![Build Status](https://github.com/repobee/repobee-feedback/actions/workflows/tests.yml/badge.svg)](https://github.com/repobee/repobee-feedback/actions/workflows/tests.yml)
 [![Code Coverage](https://codecov.io/gh/repobee/repobee-feedback/branch/master/graph/badge.svg)](https://codecov.io/gh/repobee/repobee-feedback)
 [![PyPi Version](https://badge.fury.io/py/repobee-feedback.svg)](https://badge.fury.io/py/repobee-feedback)
 ![Supported Python Versions](https://img.shields.io/badge/python-3.6%7C3.7%7C3.8-blue)

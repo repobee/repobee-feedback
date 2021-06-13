@@ -5,3 +5,4 @@ codecov
 black
 flake8
 mypy
+types-dataclasses;python_version<'3.7',

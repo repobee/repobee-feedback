@@ -18,7 +18,7 @@ test_requirements = [
     "black",
     "flake8",
     "mypy",
-    "types-dataclasses",
+    "types-dataclasses;python_version<'3.7'",
 ]
 required = ["repobee>=3.0.0-beta.1"]
 

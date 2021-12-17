@@ -11,6 +11,7 @@ import pathlib
 import re
 import sys
 import argparse
+from textwrap import indent
 from typing import Iterable, Tuple, List, Mapping
 
 import repobee_plug as plug
@@ -18,7 +19,7 @@ import repobee_plug as plug
 PLUGIN_NAME = "feedback"
 
 BEGIN_ISSUE_PATTERN = r"#ISSUE#(.*?)#(.*)"
-
+INDENTATION_STR = "    >"
 
 def callback(args: argparse.Namespace, api: plug.PlatformAPI) -> None:
     repo_name_to_team: Mapping[str, plug.StudentTeam] = {
@@ -110,11 +111,10 @@ class Feedback(plug.Plugin, plug.cli.Command):
 
 def _ask_for_open(issue: plug.Issue, repo_name: str, trunc_len: int) -> bool:
     plug.echo(
-        'Processing issue "{}" for {}: {}{}'.format(
+        '\nProcessing issue "{}" for {}:\n{}'.format(
             issue.title,
             repo_name,
-            issue.body[:trunc_len],
-            "[...]" if len(issue.body) > trunc_len else "",
+            indent(issue.body[:trunc_len], INDENTATION_STR)
         )
     )
     return (

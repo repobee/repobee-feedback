@@ -21,6 +21,7 @@ PLUGIN_NAME = "feedback"
 BEGIN_ISSUE_PATTERN = r"#ISSUE#(.*?)#(.*)"
 INDENTATION_STR = "    >"
 
+
 def callback(args: argparse.Namespace, api: plug.PlatformAPI) -> None:
     repo_name_to_team: Mapping[str, plug.StudentTeam] = {
         plug.generate_repo_name(
@@ -114,7 +115,7 @@ def _ask_for_open(issue: plug.Issue, repo_name: str, trunc_len: int) -> bool:
         '\nProcessing issue "{}" for {}:\n{}'.format(
             issue.title,
             repo_name,
-            indent(issue.body[:trunc_len], INDENTATION_STR)
+            indent(issue.body[:trunc_len], INDENTATION_STR),
         )
     )
     return (

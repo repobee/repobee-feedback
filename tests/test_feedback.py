@@ -223,3 +223,23 @@ class TestCallback:
         feedback.callback(args=args, api=api_mock)
 
         api_mock.create_issue.assert_has_calls(expected_calls, any_order=True)
+
+
+class TestIndentIssueBody:
+    """Tests for the method that addds indentation to the issue body"""
+
+    def test_issue_indented_and_truncated(
+        self,
+    ):
+        """Test that a long issue body get truncated to a certain length"""
+        body = "Hello\nworld\n"
+        indented_body = feedback._indent_issue_body(body, 10)
+        assert feedback.TRUNC_SIGN in indented_body
+
+    def test_issue_indented_and_not_truncated(
+        self,
+    ):
+        """Test that a short issue body does not get truncated"""
+        body = "This is an issue\n"
+        indented_body = feedback._indent_issue_body(body, 20)
+        assert not feedback.TRUNC_SIGN in indented_body

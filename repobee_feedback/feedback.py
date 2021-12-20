@@ -11,6 +11,7 @@ import pathlib
 import re
 import sys
 import argparse
+from textwrap import indent
 from typing import Iterable, Tuple, List, Mapping
 
 import repobee_plug as plug
@@ -18,6 +19,8 @@ import repobee_plug as plug
 PLUGIN_NAME = "feedback"
 
 BEGIN_ISSUE_PATTERN = r"#ISSUE#(.*?)#(.*)"
+INDENTATION_STR = "    "
+TRUNC_SIGN = "[...]"
 
 
 def callback(args: argparse.Namespace, api: plug.PlatformAPI) -> None:
@@ -108,20 +111,20 @@ class Feedback(plug.Plugin, plug.cli.Command):
         callback(self.args, api)
 
 
+def _indent_issue_body(body: str, trunc_len: int):
+    indented_body = indent(body[:trunc_len], INDENTATION_STR)
+    body_end = TRUNC_SIGN if len(body) > trunc_len else ""
+    return indented_body + body_end
+
+
 def _ask_for_open(issue: plug.Issue, repo_name: str, trunc_len: int) -> bool:
-    plug.echo(
-        'Processing issue "{}" for {}: {}{}'.format(
-            issue.title,
-            repo_name,
-            issue.body[:trunc_len],
-            "[...]" if len(issue.body) > trunc_len else "",
-        )
+    indented_body = _indent_issue_body(issue.body, trunc_len)
+    issue_description = (
+        f'\nProcessing issue "{issue.title}" for {repo_name}:\n{indented_body}'
     )
+    plug.echo(issue_description)
     return (
-        input(
-            'Open issue "{}" in repo {}? (y/n) '.format(issue.title, repo_name)
-        )
-        == "y"
+        input(f'Open issue "{issue.title}" in repo {repo_name}? (y/n) ') == "y"
     )
 
 

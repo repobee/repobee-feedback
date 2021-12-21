@@ -19,6 +19,7 @@ import repobee_plug as plug
 PLUGIN_NAME = "feedback"
 
 BEGIN_ISSUE_PATTERN = r"#ISSUE#(.*?)#(.*)"
+MULTI_ISSUE_FILENAME = "issues.md"
 INDENTATION_STR = "    "
 TRUNC_SIGN = "[...]"
 
@@ -109,6 +110,53 @@ class Feedback(plug.Plugin, plug.cli.Command):
 
     def command(self, api: plug.PlatformAPI):
         callback(self.args, api)
+
+
+class GenerateMultiIssueFile(plug.Plugin, plug.cli.Command):
+    __settings__ = plug.cli.command_settings(
+        help="auto generate multi-issue file",
+        description="Will generate a multi-issue file template "
+        "where each pair of student and assignment (args) passed "
+        "will become an issue that starts with the line "
+        "#ISSUE#<STUDENT_REPO_NAME>#<ISSUE_TITLE>, followed by its "
+        "body. Title and body should be filled appropriately later.",
+        category=plug.cli.CoreCommand.issues,
+        action="generate-multi-issue-files",
+        base_parsers=[plug.BaseParser.ASSIGNMENTS, plug.BaseParser.STUDENTS],
+    )
+
+    assignments = plug.cli.option(required=True)
+    students = plug.cli.option(required=True)
+
+    def command(
+        self,
+    ):
+        _generate_multi_issue_file(self.args.students, self.args.assignments)
+
+
+def _generate_multi_issue_file(students: List[str], assignments: List[str]):
+
+    if not students or not assignments:
+        plug.echo("Both --students and --assignments args are needed")
+        return
+    elif len(students) != len(assignments):
+        plug.echo("Each --student must have a corresponding --assignment")
+        return
+
+    issue_headers = [
+        _generate_issue_header(student, assignment)
+        for student, assignment in zip(students, assignments)
+    ]
+
+    with open(MULTI_ISSUE_FILENAME, "w") as file:
+        for header in issue_headers:
+            file.write(header)
+
+    plug.echo(f"Created multi-issue file '{MULTI_ISSUE_FILENAME}'")
+
+
+def _generate_issue_header(student: str, assignment: str):
+    return f"#ISSUE#{student}-{assignment}#<ISSUE-TITLE>\n<ISSUE-BODY>\n\n"
 
 
 def _indent_issue_body(body: str, trunc_len: int):

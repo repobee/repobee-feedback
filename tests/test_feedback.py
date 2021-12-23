@@ -225,45 +225,6 @@ class TestCallback:
         api_mock.create_issue.assert_has_calls(expected_calls, any_order=True)
 
 
-@pytest.fixture
-def issues_file(monkeypatch, tmpdir):
-    issues_file = tmpdir / "issues.md"
-    monkeypatch.setattr(feedback, "MULTI_ISSUE_FILENAME", issues_file)
-    return issues_file
-
-
-class TestGenerateMultiIssueFile:
-    """Tests generation of a multi-issue file"""
-
-    MULTI_ISSUE_FILE_CONTENT = (
-        "#ISSUE#bob-task-1#<ISSUE-TITLE>\n<ISSUE-BODY>\n\n"
-        "#ISSUE#alice-task-2#<ISSUE-TITLE>\n<ISSUE-BODY>\n\n"
-    )
-
-    def tmpdir_is_empty(self, _tmpdir):
-        return len(_tmpdir.listdir()) == 0
-
-    def test_multi_issue_file_generated(self, issues_file):
-        feedback._generate_multi_issue_file(
-            ["bob", "alice"], ["task-1", "task-2"]
-        )
-        assert issues_file.read() == self.MULTI_ISSUE_FILE_CONTENT
-
-    def test_missing_information_to_generate_multi_issue_file(
-        self, issues_file, tmpdir
-    ):
-        feedback._generate_multi_issue_file(students=[], assignments=[])
-        assert self.tmpdir_is_empty(tmpdir)
-
-    def test_information_mismatch_when_generating_multi_issue_file(
-        self, issues_file, tmpdir
-    ):
-        feedback._generate_multi_issue_file(
-            students=["bob", "alice"], assignments=["bob-task"]
-        )
-        assert self.tmpdir_is_empty(tmpdir)
-
-
 class TestIndentIssueBody:
     """Tests for the method that addds indentation to the issue body"""
 

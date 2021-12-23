@@ -1,20 +1,21 @@
-import pathlib
 import sys
 
-import pytest
-
 import repobee
-from repobee_feedback import feedback
+from repobee_feedback._generate_multi_issues_file import (
+    MULTI_ISSUES_FILENAME,
+    GENERATE_MULTI_ISSUES_FILE_ACTION,
+    GenerateMultiIssuesFile,
+)
 
 
-class TestGenerateMultiIssueFile:
+class TestGenerateMultiIssuesFile:
     """Tests generation of a multi-issues file"""
 
-    def test_creates_non_empty_output_file(tmpdir):
+    def test_creates_non_empty_output_file(self, tmp_path):
         students = "alice bob".split()
         assignments = "task-1 task-2"
         command = [
-            *feedback.GENERATE_MULTI_ISSUES_FILE_ACTION.as_name_tuple(),
+            *GENERATE_MULTI_ISSUES_FILE_ACTION.as_name_tuple(),
             "--students",
             students,
             "--assignments",
@@ -23,10 +24,10 @@ class TestGenerateMultiIssueFile:
 
         repobee.run(
             command,
-            plugins=[feedback.GenerateMultiIssuesFile],
-            workdir=tmpdir,
+            plugins=[GenerateMultiIssuesFile],
+            workdir=tmp_path,
         )
 
-        outfile = pathlib.Path(tmpdir) / feedback.MULTI_ISSUES_FILENAME
+        outfile = tmp_path / MULTI_ISSUES_FILENAME
         assert outfile.is_file()
         assert len(outfile.read_text(encoding=sys.getdefaultencoding())) > 0

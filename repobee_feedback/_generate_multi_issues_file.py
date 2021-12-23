@@ -1,10 +1,12 @@
-"""An helper command for automatic generation of a file called issue.md
-with issues for multiple tasks are stored together.
+"""A helper command to automatically generate a file called issue.md
+wich contains templates of issues for multiple students assignments.
 
-.. module:: _generate_multi_issue_file
-    :synopsis: An helper command for automatic generation of a multi issue file, where 
-    issues for multiple tasks are stored together.
+.. module:: _generate_multi_issues_file
+    :synopsis: A helper command to automatically generate a file
+    called issue.md wich contains templates of issues for multiple
+    students assignments.
 
+.. moduleauthor:: Marcelo Freitas
 """
 import pathlib
 import sys
@@ -25,7 +27,7 @@ class GenerateMultiIssuesFile(plug.Plugin, plug.cli.Command):
     __settings__ = plug.cli.command_settings(
         help="auto generate multi-issues file",
         description="Will generate a multi-issues file template "
-        "where each pair of student and assignment (args) passed "
+        "where each pair of student assignment passed "
         "will become an issue that starts with the line "
         "#ISSUE#<STUDENT_REPO_NAME>#<ISSUE_TITLE>, followed by its "
         "body. Title and body should be filled appropriately later.",
@@ -45,7 +47,7 @@ class GenerateMultiIssuesFile(plug.Plugin, plug.cli.Command):
             encoding=sys.getdefaultencoding(),
         )
 
-    plug.echo(f"Created multi-issue file '{MULTI_ISSUES_FILENAME}'")
+    plug.echo(f"Created multi-issues file '{MULTI_ISSUES_FILENAME}'")
 
 
 def _generate_multi_issues_file_content(

@@ -17,7 +17,7 @@ from typing import Iterable, Tuple, List, Mapping
 import repobee_plug as plug
 from repobee_feedback._generate_multi_issues_file import (
     GenerateMultiIssuesFile,
-)  #  noqa: F401
+)  # noqa: F401
 
 PLUGIN_NAME = "feedback"
 

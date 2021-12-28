@@ -25,7 +25,10 @@ GENERATE_MULTI_ISSUES_FILE_ACTION = Action(
 
 class GenerateMultiIssuesFile(plug.Plugin, plug.cli.Command):
     __settings__ = plug.cli.command_settings(
-        help="auto generate multi-issues file for the `issues feedback` command",
+        help=(
+            "auto generate multi-issues file"
+            " for the `issues feedback` command"
+        ),
         description="Will generate a multi-issues file template "
         "where each pair of student assignment passed "
         "will become an issue that starts with the line "

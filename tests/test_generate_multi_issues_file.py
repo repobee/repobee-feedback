@@ -13,14 +13,25 @@ class TestGenerateMultiIssuesFile:
 
     def test_creates_non_empty_output_file(self, tmp_path):
         students = "alice bob".split()
-        assignments = "task-1 task-2"
+        assignments = "task-1 task-2".split()
         command = [
             *GENERATE_MULTI_ISSUES_FILE_ACTION.as_name_tuple(),
             "--students",
-            students,
+            *students,
             "--assignments",
-            assignments,
+            *assignments,
         ]
+
+        expected_content = (
+            "#ISSUE#alice-task-1#<ISSUE-TITLE>\n"
+            "<ISSUE-BODY>\n\n"
+            "#ISSUE#bob-task-1#<ISSUE-TITLE>\n"
+            "<ISSUE-BODY>\n\n"
+            "#ISSUE#alice-task-2#<ISSUE-TITLE>\n"
+            "<ISSUE-BODY>\n\n"
+            "#ISSUE#bob-task-2#<ISSUE-TITLE>\n"
+            "<ISSUE-BODY>"
+        )
 
         repobee.run(
             command,
@@ -29,5 +40,6 @@ class TestGenerateMultiIssuesFile:
         )
 
         outfile = tmp_path / MULTI_ISSUES_FILENAME
+        content = outfile.read_text(encoding=sys.getdefaultencoding())
         assert outfile.is_file()
-        assert len(outfile.read_text(encoding=sys.getdefaultencoding())) > 0
+        assert content == expected_content

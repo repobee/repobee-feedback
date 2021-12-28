@@ -25,7 +25,7 @@ GENERATE_MULTI_ISSUES_FILE_ACTION = Action(
 
 class GenerateMultiIssuesFile(plug.Plugin, plug.cli.Command):
     __settings__ = plug.cli.command_settings(
-        help="auto generate multi-issues file",
+        help="auto generate multi-issues file for the `issues feedback` command",
         description="Will generate a multi-issues file template "
         "where each pair of student assignment passed "
         "will become an issue that starts with the line "
@@ -35,28 +35,25 @@ class GenerateMultiIssuesFile(plug.Plugin, plug.cli.Command):
         base_parsers=[plug.BaseParser.ASSIGNMENTS, plug.BaseParser.STUDENTS],
     )
 
-    def command(
-        self,
-    ):
+    def command(self):
         content = _generate_multi_issues_file_content(
             self.args.students, self.args.assignments
         )
 
         pathlib.Path(MULTI_ISSUES_FILENAME).write_text(
-            "\n\n".join(content),
-            encoding=sys.getdefaultencoding(),
+            content, encoding=sys.getdefaultencoding()
         )
 
-    plug.echo(f"Created multi-issues file '{MULTI_ISSUES_FILENAME}'")
+        plug.echo(f"Created multi-issues file '{MULTI_ISSUES_FILENAME}'")
 
 
 def _generate_multi_issues_file_content(
     students: List[str], assignments: List[str]
-):
+) -> str:
 
     issue_headers = [
         f"#ISSUE#{repo_name}#<ISSUE-TITLE>\n<ISSUE-BODY>"
         for repo_name in plug.generate_repo_names(students, assignments)
     ]
 
-    return issue_headers
+    return "\n\n".join(issue_headers)

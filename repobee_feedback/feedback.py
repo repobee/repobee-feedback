@@ -15,6 +15,9 @@ from textwrap import indent
 from typing import Iterable, Tuple, List, Mapping
 
 import repobee_plug as plug
+from repobee_feedback._generate_multi_issues_file import (  # noqa: F401
+    GenerateMultiIssuesFile,
+)
 
 PLUGIN_NAME = "feedback"
 

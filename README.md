@@ -2,7 +2,7 @@
 [![Build Status](https://github.com/repobee/repobee-feedback/actions/workflows/tests.yml/badge.svg)](https://github.com/repobee/repobee-feedback/actions/workflows/tests.yml)
 [![Code Coverage](https://codecov.io/gh/repobee/repobee-feedback/branch/master/graph/badge.svg)](https://codecov.io/gh/repobee/repobee-feedback)
 [![PyPi Version](https://badge.fury.io/py/repobee-feedback.svg)](https://badge.fury.io/py/repobee-feedback)
-![Supported Python Versions](https://img.shields.io/badge/python-3.6%7C3.7%7C3.8-blue)
+![Supported Python Versions](https://img.shields.io/badge/python-3.7%7C3.8-blue)
 ![Supported Platforms](https://img.shields.io/badge/platforms-Linux%2C%20macOS-blue.svg)
 [![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 [![Code Style: Black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
